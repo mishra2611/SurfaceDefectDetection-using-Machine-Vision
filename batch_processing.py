@@ -42,7 +42,7 @@ from resnet import get_resnet, identity_block, conv_block, up_conv_block
 from segnet import get_segnet
 import time
 
-
+#Implementation of paper
 def paper2():
     model=Sequential()
     model.add(InputLayer(input_shape=[512,512,3]))
@@ -59,6 +59,7 @@ def paper2():
     model.summary()
     return model
 
+#Implementation of a paper
 def get_model():
     model = Sequential()  
     model.add(InputLayer(input_shape=[512,512,1]))
@@ -132,40 +133,40 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
     with open("resnet-model-1-6.json", "w") as json_file:
         json_file.write(model_json)
 
-def train_model():
-    X_train=get_data("Train")
-    X_train_data = np.array([i[0] for i in X_train]).reshape(-1,512,512,1)
-    Y_train = get_defective_label("Train")
-    Y_train_data = np.array([i[0] for i in Y_train]).reshape(-1,128,128,1)
-    X_test=get_data("Test")
-    X_test_data = np.array([i[0] for i in X_test]).reshape(-1,512,512,1)
-    Y_test = get_defective_label("Test")
-    Y_test_data = np.array([i[0] for i in Y_test]).reshape(-1,128,128,1)
-    model = conv_deconv_model()
-    adelta = Adadelta(lr=0.75, rho=0.95, epsilon=None, decay=0.0)
-    model.compile(optimizer=adelta, loss='mean_squared_error', metrics=['accuracy'])
-    model.summary()
-    model.fit(np.array(X_train_data), np.array(Y_train_data), batch_size=1, epochs=10, validation_data=(X_test_data, Y_test_data))
+#def train_model():
+    #X_train=get_data("Train")
+    #X_train_data = np.array([i[0] for i in X_train]).reshape(-1,512,512,1)
+    #Y_train = get_defective_label("Train")
+    #Y_train_data = np.array([i[0] for i in Y_train]).reshape(-1,128,128,1)
+    #X_test=get_data("Test")
+    #X_test_data = np.array([i[0] for i in X_test]).reshape(-1,512,512,1)
+    #Y_test = get_defective_label("Test")
+    #Y_test_data = np.array([i[0] for i in Y_test]).reshape(-1,128,128,1)
+    #model = conv_deconv_model()
+    #adelta = Adadelta(lr=0.75, rho=0.95, epsilon=None, decay=0.0)
+    #model.compile(optimizer=adelta, loss='mean_squared_error', metrics=['accuracy'])
+    #model.summary()
+    #model.fit(np.array(X_train_data), np.array(Y_train_data), batch_size=1, epochs=10, validation_data=(X_test_data, Y_test_data))
     
 
     
-def get_data(imgtype):
-    train_images=[]
-    path="./Class/"
-    for x in range(1,7):
-        path="./Class"+str(x)+"/"
-        prina(path)
-        read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
-        read_file = str(read_file)
-        df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
-        for i in range(0, len(df)):
-           if(int(df.iloc[i][1])==1):
-               fname=path+imgtype+"/"+str(df.iloc[i][2])
-               print(fname)
-               img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-               img=cv2.resize(img,(512,512))
-               train_images.append([np.array(img)])
-    return train_images
+#def get_data(imgtype):
+    #train_images=[]
+    #path="./Class/"
+    #for x in range(1,7):
+        #path="./Class"+str(x)+"/"
+        #prina(path)
+        #read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
+        #read_file = str(read_file)
+        #df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
+        #for i in range(0, len(df)):
+           #if(int(df.iloc[i][1])==1):
+               #fname=path+imgtype+"/"+str(df.iloc[i][2])
+               #print(fname)
+               #img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
+               #img=cv2.resize(img,(512,512))
+               #train_images.append([np.array(img)])
+    #return train_images
            
 
 def get_class_for_generator(imgtype):
@@ -220,24 +221,24 @@ def gen_black_image(path):
     cv2.imwrite(path, img)
     return path
 
-def get_defective_label(imgtype):
-    train_images=[]
-    path="./Class/"
-    for x in range(1,7):
-        path="./Class"+str(x)+"/"
-        print(path)
-        read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
-        read_file = str(read_file)
-        df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
-        for i in range(0, len(df)):
-           if(int(df.iloc[i][1])==1):
-               fname=path+imgtype+"/"+str(df.iloc[i][2])
-               print(fname)
-               img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-               img = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY)[1]
-               img=cv2.resize(img,(128,128))
-               train_images.append([np.array(img)])
-    return train_images
+#def get_defective_label(imgtype):
+    #train_images=[]
+    #path="./Class/"
+    #for x in range(1,7):
+        #path="./Class"+str(x)+"/"
+        #print(path)
+        #read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
+        #read_file = str(read_file)
+        #df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
+        #for i in range(0, len(df)):
+           #if(int(df.iloc[i][1])==1):
+               #fname=path+imgtype+"/"+str(df.iloc[i][2])
+               #print(fname)
+               #img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
+               #img = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY)[1]
+               #img=cv2.resize(img,(128,128))
+               #train_images.append([np.array(img)])
+    #return train_images
 
 def IOU_calc(y_true, y_pred):
     y_true_f = K.flatten(y_true)
