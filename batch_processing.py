@@ -35,6 +35,12 @@ from skimage.io import imread
 from skimage.transform import resize
 import  MY_Generator as mv
 from Metrics import Metrics
+from random import shuffle
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from resnet import get_resnet, identity_block, conv_block, up_conv_block
+from segnet import get_segnet
+import time
 
 
 def paper2():
@@ -107,6 +113,8 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
     my_training_batch_generator = mv.MY_Generator(training_filenames, GT_training, batch_size)
     my_validation_batch_generator = mv.MY_Generator(validation_filenames, GT_validation, batch_size)
     #metrics = Metrics()
+    millis = int(round(time.time() * 1000))
+    print millis
     model.fit_generator(generator=my_training_batch_generator,
                                           steps_per_epoch=(num_training_samples // batch_size),
                                           epochs=num_epochs,
@@ -115,9 +123,14 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
                                           validation_steps=(num_validation_samples // batch_size),
                                           use_multiprocessing=True,
                                           #callbacks=[metrics],
-                                          workers=15,
-                                          max_queue_size=30)
-    model.save('loc1.h5')
+                                          workers=5,
+                                          max_queue_size=1)
+    millis = int(round(time.time() * 1000))
+    print millis
+    model.save('res-net-1-6.h5')
+    model_json = model.to_json()
+    with open("resnet-model-1-6.json", "w") as json_file:
+        json_file.write(model_json)
 
 def train_model():
     X_train=get_data("Train")
@@ -160,6 +173,7 @@ def get_class_for_generator(imgtype):
     filename=[]
     filecode=[]
     filelist={}
+    defectmap={}
     fn=[]
     fc=[]
     count=0
@@ -168,19 +182,36 @@ def get_class_for_generator(imgtype):
         read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
         read_file = str(read_file)
         df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
+        count=0
         for i in range(0, len(df)):
+            imagefile=str(df.iloc[i][2])
+            img= cv2.imread(path+imagefile)
+            #edges = cv2.Canny(img,100,200)
+            #plt.imshow(edges)
+            cv2.imwrite(path+"Canny/"+imagefile, img)
+            currfile=path+imgtype+"/"+str(df.iloc[i][2])
             if(df.iloc[i][1] == 1):
                 filename.append(path+imgtype+"/"+str(df.iloc[i][2]))
                 filecode.append(path+imgtype+"/Label/"+str(df.iloc[i][4]))
                 filelist[path+imgtype+"/"+str(df.iloc[i][2])]=path+imgtype+"/Label/"+str(df.iloc[i][4])
-            elif count<79:
+                defectmap[currfile]=1
+            else:
                 filename.append(path+imgtype+"/"+str(df.iloc[i][2]))
-                filecode.append(gen_black_image(path+imgtype+"/Label/"+str(df.iloc[i][2])))
-                count=count+1
-                filelist[path+imgtype+"/"+str(df.iloc[i][2])] = gen_black_image(path+imgtype+"/Label/"+str(df.iloc[i][2]))
-    for key in filelist:
-        fn.append(key)
-        fc.append(filelist[key])
+                fnametest=str(df.iloc[i][2]).split(".")
+                filecode.append(gen_black_image(path+imgtype+"/Label/"+fnametest[0]+"_label.PNG"))
+                filelist[path+imgtype+"/"+str(df.iloc[i][2])] = str(path+imgtype+"/Label/"+fnametest[0]+"_label.PNG")
+                defectmap[currfile]=0
+    items=list(filelist.keys())
+    shuffle(items)
+    for key in items:
+        if defectmap[key]==1:
+            fn.append(key)
+            fc.append(filelist[key])
+        elif count<80*6:
+            fn.append(key)
+            fc.append(filelist[key])
+            count=count+1
+        print(key, filelist[key])
     return fn, fc
         
 def gen_black_image(path):
@@ -272,17 +303,16 @@ def conv_deconv_model():
 #train_model();
 #binary_classifier();
 X_train, Y_train = get_class_for_generator("Train")
-zc=0
-oc=0
-for x in range(len(X_train)):
-	#print(X_train[x]+" "+str(Y_train[x]))  
-    if(Y_train[x]==1):
-        zc=zc+1
-    else:
-        oc=oc+1
-print(str(zc)+" "+str(oc))
-X_test, Y_test = get_class_for_generator("Test")  
-binary_model = conv_deconv_model() 
+X_train, X_test, y_train, y_test = train_test_split(X_train, Y_train, test_size=0.30)
+X_train=np.array(X_train)
+X_test=np.array(X_test)
+y_train=np.array(y_train)
+y_test=np.array(y_test)
+print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+#X_test, Y_test = get_class_for_generator("Test")  
+#binary_model = conv_deconv_model()
+#binary_model = get_resnet(f=16, bn_axis=3, classes=1) 
+binary_model=get_segnet()
 #binary_model.save('binary-model-1.h5')
-binary_fit(binary_model, X_train, Y_train, X_test, Y_test) 
+binary_fit(binary_model, X_train, y_train, X_test, y_test) 
 

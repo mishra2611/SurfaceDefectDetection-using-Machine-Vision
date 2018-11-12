@@ -17,10 +17,22 @@ class MY_Generator(keras.utils.Sequence):
     def __getitem__(self, idx):
         batch_x = self.image_filenames[idx * self.batch_size:(idx + 1) * self.batch_size]
         batch_y = self.labels[idx * self.batch_size:(idx + 1) * self.batch_size]
-
-        arr = np.array([resize(cv2.imread(file_name), (512,512,1), mode='constant') for file_name in batch_x])
-        arr2 = np.array([resize(cv2.imread(file_name), (512,512,1), mode='constant') for file_name in batch_y])
+        arr=[]
+        arr2=[]
+        for file_name in batch_x:
+            img=resize(cv2.imread(file_name, 0),(512,512,1), mode='constant')
+            #print(img.shape)
+            arr.append(img)
+            img=np.rot90(img)
+            arr.append(img)
+        for file_name in batch_y:
+            img = resize(cv2.imread(file_name, 0), (512,512,1), mode='constant')
+            arr2.append(img)
+            img=np.rot90(img)
+            arr2.append(img)
+        #arr = np.array([resize(cv2.Canny(cv2.imread(file_name, 0), 100, 200), (512,512,1), mode='constant') for file_name in batch_x])
+        #arr2 = np.array([resize(cv2.imread(file_name, 0), (512,512,1), mode='constant') for file_name in batch_y])
         #arr2 = np.array(batch_y)
         #arr = arr.astype("float")/255.0
         #arr2 = arr2.astype("float")/255.0
-        return arr,arr2
+        return np.array(arr), np.array(arr2)
