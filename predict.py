@@ -23,9 +23,15 @@ from tensorflow.python.lib.io import file_io
 from io import StringIO
 from PIL import Image
 from keras.models import load_model, Model
+from keras import backend as K
 import io
 import os
 import shutil
+import matplotlib.pyplot as plt
+import matplotlib
+from keras.utils import plot_model
+from skimage.transform import resize
+from metrics import dice_coef, dice_coef_loss, precision, recall, f1score
 
 
 def IOU_calc(y_true, y_pred):
@@ -41,8 +47,9 @@ def IOU_calc_loss(y_true, y_pred):
 
 def get_data(imgtype):
     train_images=[]
+    filenames=[]
     path="~/Documents/Class/"
-    for x in range(1,2):
+    for x in range(7,8):
         path="./Class"+str(x)+"/"
         #prina(path)
         read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
@@ -53,41 +60,47 @@ def get_data(imgtype):
                fname=path+imgtype+"/"+str(df.iloc[i][2])
                print(fname)
                img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-               img=cv2.Canny(img, 100, 200)
-               img=cv2.resize(img,(512,512))
-               train_images.append([np.array(img)])
-    return train_images
+               #img=cv2.Canny(img, 100, 200)
+               img=resize(img,(512,512,1))
+               train_images.append(img)
+               f=df.iloc[i][2].split(".")
+               filenames.append(f[0])
+               print(f[0])
+    return train_images, filenames
 
 
 
 def predict_one2():
     #image_batch, mask_batch = next(validation_generator)
     #model = keras_model(img_width=512, img_height=512)
-    model = load_model('loc1.h5',custom_objects={'IOU_calc_loss': IOU_calc_loss, 'IOU_calc': IOU_calc})
+    model = load_model('u-net-test.h5',custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
     #plot_model(model, to_file='model.png')
-    fname="0595.PNG"
-    img=cv2.imread(fname,0)
-    img=cv2.Canny(img, 100, 200)
-    cv2.imwrite("test12.jpg",img)
+    #fname="0595.PNG"
+    #img=cv2.imread(fname,0)
+    #img=cv2.Canny(img, 100, 200)
+    #cv2.imwrite("test12.jpg",img)
     #print(img.shape)
     #print(predicted_mask_batch.shape)
     #print(img.shape)
     #img =img.resize(img, (512,512))
     #img = np.array(img)
     #img =img.resize(img, (512,512))
-    testimg=get_data("Test")
-    X_train=get_data("Test")
-    X_train_data = np.array([i[0] for i in X_train]).reshape(-1,512,512,1)
+    #testimg=get_data("Test")
+    X_train, filenames=get_data("Test")
+    X_train_data = np.array(X_train)
     #print(X_train_data.shape)
     predicted_mask_batch = model.predict(X_train_data)
-    predicted_mask_batch = predicted_mask_batch*255
+    #predicted_mask_batch = predicted_mask_batch
     #print(predicted_mask_batch[0,:,:,0])
-
+    
     #predicted_mask_batch = predicted_mask_batch.reshape(512,512)
 
-    #predicted_mask_batch = np.array(predicted_mask_batch)
-    cv2.imwrite("./test1.jpg", predicted_mask_batch[0])
-    img3=cv2.imread(fname,0)
+    predicted_mask_batch = predicted_mask_batch*255
+    for x in range(len(predicted_mask_batch)):
+        cv2.imwrite(filenames[x]+".jpg", predicted_mask_batch[x]) 
+        print(filenames[x]+".jpg")   
+    
+    #img3=cv2.imread(fname,0)
     #image = image_batch[0]
     #predicted_mask = predicted_mask_batch[0].reshape(SIZE)
     #plt.imshow(img)
