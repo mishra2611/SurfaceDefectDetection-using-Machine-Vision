@@ -34,12 +34,13 @@ import shutil
 from skimage.io import imread
 from skimage.transform import resize
 import  MY_Generator as mv
-from Metrics import Metrics
+#from Metrics import Metrics
 from random import shuffle
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from resnet import get_resnet, identity_block, conv_block, up_conv_block
 from segnet import get_segnet
+from deeplab import get_deeplab
 import time
 
 #Implementation of paper
@@ -107,15 +108,16 @@ def binary_classifier1():
     return classifier
 
 def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_validation):
-    batch_size=5
+    batch_size=1
     num_training_samples=len(training_filenames)
     num_validation_samples=len(validation_filenames)
-    num_epochs=30
+    num_epochs=50
     my_training_batch_generator = mv.MY_Generator(training_filenames, GT_training, batch_size)
     my_validation_batch_generator = mv.MY_Generator(validation_filenames, GT_validation, batch_size)
     #metrics = Metrics()
-    millis = int(round(time.time() * 1000))
-    print millis
+    stmillis = int(round(time.time() * 1000))
+    tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+    #print millis
     model.fit_generator(generator=my_training_batch_generator,
                                           steps_per_epoch=(num_training_samples // batch_size),
                                           epochs=num_epochs,
@@ -123,14 +125,14 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
                                           validation_data=my_validation_batch_generator,
                                           validation_steps=(num_validation_samples // batch_size),
                                           use_multiprocessing=True,
-                                          #callbacks=[metrics],
+                                          callbacks=[tbCallBack],
                                           workers=5,
                                           max_queue_size=1)
-    millis = int(round(time.time() * 1000))
-    print millis
-    model.save('res-net-1-6.h5')
+    endmillis = int(round(time.time() * 1000))
+    print (endmillis-stmillis)
+    model.save('deeplab-1-6.h5')
     model_json = model.to_json()
-    with open("resnet-model-1-6.json", "w") as json_file:
+    with open("deeplab-1-6.json", "w") as json_file:
         json_file.write(model_json)
 
 #def train_model():
@@ -170,7 +172,7 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
            
 
 def get_class_for_generator(imgtype):
-    path="./Class/"
+    path="~/Class/"
     filename=[]
     filecode=[]
     filelist={}
@@ -179,7 +181,7 @@ def get_class_for_generator(imgtype):
     fc=[]
     count=0
     for x in range(1,2):
-        path="./Class"+str(x)+"/"
+        path="../Class"+str(x)+"/"
         read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
         read_file = str(read_file)
         df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
@@ -313,7 +315,7 @@ print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 #X_test, Y_test = get_class_for_generator("Test")  
 #binary_model = conv_deconv_model()
 #binary_model = get_resnet(f=16, bn_axis=3, classes=1) 
-binary_model=get_segnet()
+binary_model=get_deeplab()
 #binary_model.save('binary-model-1.h5')
 binary_fit(binary_model, X_train, y_train, X_test, y_test) 
 
