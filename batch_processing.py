@@ -43,7 +43,7 @@ from segnet import get_segnet
 from deeplab import get_deeplab
 import time
 
-#Implementation of paper
+#Implementation of paper, model not used currently
 def paper2():
     model=Sequential()
     model.add(InputLayer(input_shape=[512,512,3]))
@@ -60,7 +60,7 @@ def paper2():
     model.summary()
     return model
 
-#Implementation of a paper
+#Implementation of a paper, model not used currently
 def get_model():
     model = Sequential()  
     model.add(InputLayer(input_shape=[512,512,1]))
@@ -78,6 +78,7 @@ def get_model():
     model.summary()
     return model
 
+#model, not used currently
 def binary_classifier():
     classifier = Sequential()
     classifier.add(Conv2D(64, kernel_size = (3,3), input_shape = (512,512,3), activation = 'relu',padding='same'))
@@ -107,6 +108,7 @@ def binary_classifier1():
     classifier.summary()
     return classifier
 
+#method for calling fit_generator(batch training of images)
 def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_validation):
     batch_size=1
     num_training_samples=len(training_filenames)
@@ -252,7 +254,7 @@ def IOU_calc(y_true, y_pred):
 def IOU_calc_loss(y_true, y_pred):
     return -IOU_calc(y_true, y_pred)
 
-def conv_deconv_model():
+def u-net():
     inputs = Input((512,512,1))
     inputs_norm = Lambda(lambda x: x/127.5 - 1.)
     conv1 = Conv2D(8, (3,3), activation = 'relu', padding='same')(inputs)
@@ -313,7 +315,7 @@ y_train=np.array(y_train)
 y_test=np.array(y_test)
 print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 #X_test, Y_test = get_class_for_generator("Test")  
-#binary_model = conv_deconv_model()
+#binary_model = u-net()
 #binary_model = get_resnet(f=16, bn_axis=3, classes=1) 
 binary_model=get_deeplab()
 #binary_model.save('binary-model-1.h5')

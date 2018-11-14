@@ -70,7 +70,7 @@ def get_data(imgtype):
 
 
 
-def predict_one2():
+def predict_images():
     #image_batch, mask_batch = next(validation_generator)
     #model = keras_model(img_width=512, img_height=512)
     model = load_model('u-net-test.h5',custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
@@ -110,6 +110,6 @@ def predict_one2():
 
 
 np.set_printoptions(threshold=np.inf, precision=8, floatmode='maxprec')
-predict_one2()
+predict_images()
 
 
