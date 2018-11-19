@@ -5,6 +5,9 @@ import numpy as np
 import keras
 import cv2
 
+"""
+############## This is generator class to process data in batches and send them for training. ##############
+"""
 class MY_Generator(keras.utils.Sequence):
 
     def __init__(self, image_filenames, labels, batch_size):
@@ -30,9 +33,4 @@ class MY_Generator(keras.utils.Sequence):
             arr2.append(img)
             img=np.rot90(img)
             arr2.append(img)
-        #arr = np.array([resize(cv2.Canny(cv2.imread(file_name, 0), 100, 200), (512,512,1), mode='constant') for file_name in batch_x])
-        #arr2 = np.array([resize(cv2.imread(file_name, 0), (512,512,1), mode='constant') for file_name in batch_y])
-        #arr2 = np.array(batch_y)
-        #arr = arr.astype("float")/255.0
-        #arr2 = arr2.astype("float")/255.0
         return np.array(arr), np.array(arr2)

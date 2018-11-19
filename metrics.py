@@ -5,6 +5,8 @@ import tensorflow as tf
 from keras import backend as K, models
 
 def defect_accuracy(y_true, y_pred):
+    """Accuracy metric.
+    """
     return K.mean(K.equal(y_true, K.round(y_pred)), axis=1)
 
 def dice_coef(y_true, y_pred):

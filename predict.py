@@ -3,7 +3,6 @@ import pandas as pd
 import cv2
 from os import listdir
 from os.path import isfile, join
-#import matplotlib.pyplot as plt
 from keras.models import Model
 from keras.models import Sequential
 from keras.layers import Input, UpSampling2D
@@ -51,28 +50,27 @@ def get_file_from_custom_folder(path):
 
 
 
-def get_data_from_test_folder(imgtype):
-    train_images=[]
-    filenames=[]
-    path="~/Documents/Class/"
-    for x in range(7,8):
-        path="./Class"+str(x)+"/"
-        #prina(path)
-        read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
-        read_file = str(read_file)
-        df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
-        for i in range(0, len(df)):
-           if(int(df.iloc[i][1])==1):
-               fname=path+imgtype+"/"+str(df.iloc[i][2])
-               print(fname)
-               img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
-               #img=cv2.Canny(img, 100, 200)
-               img=resize(img,(512,512,1))
-               train_images.append(img)
-               f=df.iloc[i][2].split(".")
-               filenames.append(f[0])
-               print(f[0])
-    return train_images, filenames
+# def get_data_from_test_folder(imgtype):
+#     train_images=[]
+#     filenames=[]
+#     path="~/Documents/Class/"
+#     for x in range(7,8):
+#         path="./Class"+str(x)+"/"
+#         #prina(path)
+#         read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
+#         read_file = str(read_file)
+#         df = pd.read_fwf(path+imgtype+"/Label/Labels.txt")
+#         for i in range(0, len(df)):
+#            if(int(df.iloc[i][1])==1):
+#                fname=path+imgtype+"/"+str(df.iloc[i][2])
+#                print(fname)
+#                img=cv2.imread(fname, cv2.IMREAD_GRAYSCALE)
+#                img=resize(img,(512,512,1))
+#                train_images.append(img)
+#                f=df.iloc[i][2].split(".")
+#                filenames.append(f[0])
+#                print(f[0])
+#     return train_images, filenames
 
 def get_file_from_custom_folder_contour(path):
     train_images=[]
@@ -83,7 +81,6 @@ def get_file_from_custom_folder_contour(path):
         currfile=path+f
         print(currfile)
         img=cv2.imread(currfile, cv2.COLOR_BGR2GRAY)
-        #img=resize(img,(512,512,1))
         train_images.append(img)
         fname=f.split(".")
         filenames.append(fname[0])
@@ -93,7 +90,6 @@ def get_file_from_custom_folder_contour(path):
 def predict_images(path):
     model = load_model('u-net-test.h5',custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
     X_train, filenames=get_file_from_custom_folder(path+"/")
-    #"/Users/saraswatimishra/Downloads/test/Test/"
     X_train_data = np.array(X_train)
     predicted_mask_batch = model.predict(X_train_data)
     predicted_mask_batch = predicted_mask_batch*255
@@ -127,11 +123,6 @@ def countour_images(path):
             cv2.imwrite(path+filenames[i]+"_predicted.jpg", img2)
         else:
             print("Image "+filenames[i]+" is non-defective")
-    #img3=cv2.imread(fname,0)
-    #image = image_batch[0]
-    #predicted_mask = predicted_mask_batch[0].reshape(SIZE)
-    #plt.imshow(img)
-    #plt.imshow(predicted_mask_batch, alpha=0.6)
 
 
 

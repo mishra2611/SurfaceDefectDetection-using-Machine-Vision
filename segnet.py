@@ -22,8 +22,6 @@ smooth = 1.
 epochs = 200
 
 
-
-
 def get_segnet():
     kernel = 3
 

@@ -20,8 +20,6 @@ class Histories(keras.callbacks.Callback):
 	def on_epoch_end(self, epoch, logs={}):
 		self.losses.append(logs.get('loss'))
 		for x_train, y_train in self.training_generator.__getitem__:
-		#y_pred = self.model.predict(self.validation_data[0])
-		#self.aucs.append(roc_auc_score(self.validation_data[1], y_pred))
 			y_pred_train = np.array(self.model.predict(x_train))
 			y_pred_train = y_pred_train.flatten()
 			y_train = y_train.flatten()
