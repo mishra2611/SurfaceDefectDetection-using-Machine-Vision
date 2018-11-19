@@ -32,20 +32,26 @@ import matplotlib
 from keras.utils import plot_model
 from skimage.transform import resize
 from metrics import dice_coef, dice_coef_loss, precision, recall, f1score
+from os import listdir
+import sys
+
+def get_file_from_custom_folder(path):
+    train_images=[]
+    filenames=[]
+    files = [f for f in listdir(path) if isfile(join(path, f))]
+    for f in files:
+        currfile=path+f
+        print(currfile)
+        img=cv2.imread(currfile, cv2.IMREAD_GRAYSCALE)
+        img=resize(img,(512,512,1))
+        train_images.append(img)
+        fname=f.split(".")
+        filenames.append(fname[0])
+    return train_images, filenames
 
 
-def IOU_calc(y_true, y_pred):
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
 
-    return 2*(intersection+2) / (K.sum(y_true_f) + K.sum(y_pred_f) +2)
-
-def IOU_calc_loss(y_true, y_pred):
-    return -IOU_calc(y_true, y_pred)
-
-
-def get_data(imgtype):
+def get_data_from_test_folder(imgtype):
     train_images=[]
     filenames=[]
     path="~/Documents/Class/"
@@ -68,38 +74,59 @@ def get_data(imgtype):
                print(f[0])
     return train_images, filenames
 
+def get_file_from_custom_folder_contour(path):
+    train_images=[]
+    filenames=[]
+    copyimages = []
+    files = [f for f in listdir(path) if isfile(join(path, f))]
+    for f in files:
+        currfile=path+f
+        print(currfile)
+        img=cv2.imread(currfile, cv2.COLOR_BGR2GRAY)
+        #img=resize(img,(512,512,1))
+        train_images.append(img)
+        fname=f.split(".")
+        filenames.append(fname[0])
+    return train_images, filenames
 
 
-def predict_images():
-    #image_batch, mask_batch = next(validation_generator)
-    #model = keras_model(img_width=512, img_height=512)
+def predict_images(path):
     model = load_model('u-net-test.h5',custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
-    #plot_model(model, to_file='model.png')
-    #fname="0595.PNG"
-    #img=cv2.imread(fname,0)
-    #img=cv2.Canny(img, 100, 200)
-    #cv2.imwrite("test12.jpg",img)
-    #print(img.shape)
-    #print(predicted_mask_batch.shape)
-    #print(img.shape)
-    #img =img.resize(img, (512,512))
-    #img = np.array(img)
-    #img =img.resize(img, (512,512))
-    #testimg=get_data("Test")
-    X_train, filenames=get_data("Test")
+    X_train, filenames=get_file_from_custom_folder(path+"/")
+    #"/Users/saraswatimishra/Downloads/test/Test/"
     X_train_data = np.array(X_train)
-    #print(X_train_data.shape)
     predicted_mask_batch = model.predict(X_train_data)
-    #predicted_mask_batch = predicted_mask_batch
-    #print(predicted_mask_batch[0,:,:,0])
-    
-    #predicted_mask_batch = predicted_mask_batch.reshape(512,512)
-
     predicted_mask_batch = predicted_mask_batch*255
     for x in range(len(predicted_mask_batch)):
-        cv2.imwrite(filenames[x]+".jpg", predicted_mask_batch[x]) 
-        print(filenames[x]+".jpg")   
+        cv2.imwrite(path+"/predictedImages/"+filenames[x]+".jpg", predicted_mask_batch[x])  
     
+
+def countour_images(path):
+    origpath=path
+    path=path+"/predictedImages/"
+    X_train_data, filenames=get_file_from_custom_folder_contour(path)
+    for i in range(len(X_train_data)):
+        (thresh, im_bw) = cv2.threshold(X_train_data[i], 127, 255, cv2.THRESH_BINARY )
+        _,contours,hierarchy = cv2.findContours(im_bw, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) > 0:
+        #img_data = cv2.drawContours(X_train_data[x], contours, -1, (0,255,0), 3)
+            img2 = cv2.imread(origpath+"/"+filenames[i]+".PNG", cv2.COLOR_BGR2GRAY)
+            img3 = X_train_data[i].copy()
+            for t in range(len(contours)):
+                if cv2.contourArea(contours[t]) < 100:
+                    #print("Image"+filenames[i]+"is not defective")
+                    continue
+
+                print("Image "+filenames[i]+"is defective")
+                x,y,w,h = cv2.boundingRect(contours[t])
+                #cv2.rectangle(img2,(x,y),(x+w,y+h),(0,255,0),2)
+                cv2.rectangle(img2,(x,y),(x+w,y+h),(0,255,0),3)
+                print("The location (x,y, width, height) of defect is: "+str(x)+","+" "+str(y)+","+str(w)+","+str(h))
+            #cv2.imwrite("/Users/saraswatimishra/Downloads/test/SurfaceDefectDetection-using-Machine-Vision/contourImages/"+filenames[i]+".jpg", img2)
+            #cv2.imwrite("/Users/saraswatimishra/Downloads/test/SurfaceDefectDetection-using-Machine-Vision/contourImages/"+filenames[i]+"_og.jpg", ogImages[i])
+            cv2.imwrite(path+filenames[i]+"_predicted.jpg", img2)
+        else:
+            print("Image "+filenames[i]+" is non-defective")
     #img3=cv2.imread(fname,0)
     #image = image_batch[0]
     #predicted_mask = predicted_mask_batch[0].reshape(SIZE)
@@ -109,7 +136,10 @@ def predict_images():
 
 
 
+
 np.set_printoptions(threshold=np.inf, precision=8, floatmode='maxprec')
-predict_images()
+path=sys.argv[1]
+predict_images(path)
+countour_images(path)
 
 
