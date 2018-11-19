@@ -41,7 +41,11 @@ from sklearn.model_selection import train_test_split
 from resnet import get_resnet, identity_block, conv_block, up_conv_block
 from segnet import get_segnet
 from deeplab import get_deeplab
+from unet import get_unet
 import time
+import sys
+from metrics import dice_coef, defect_accuracy, precision, recall, f1score, dice_coef_loss
+from customCallback import Histories
 
 #Implementation of paper, model not used currently
 def paper2():
@@ -109,7 +113,7 @@ def binary_classifier1():
     return classifier
 
 #method for calling fit_generator(batch training of images)
-def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_validation):
+def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_validation, modelname):
     batch_size=1
     num_training_samples=len(training_filenames)
     num_validation_samples=len(validation_filenames)
@@ -118,8 +122,9 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
     my_validation_batch_generator = mv.MY_Generator(validation_filenames, GT_validation, batch_size)
     #metrics = Metrics()
     stmillis = int(round(time.time() * 1000))
-    tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0, write_graph=True, write_images=True)
+    tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph-UNET', histogram_freq=0, write_graph=True, write_images=True)
     #print millis
+    #histories = Histories(my_validation_batch_generator, my_training_batch_generator)
     model.fit_generator(generator=my_training_batch_generator,
                                           steps_per_epoch=(num_training_samples // batch_size),
                                           epochs=num_epochs,
@@ -132,9 +137,9 @@ def binary_fit(model, training_filenames, GT_training, validation_filenames, GT_
                                           max_queue_size=1)
     endmillis = int(round(time.time() * 1000))
     print (endmillis-stmillis)
-    model.save('deeplab-1-6.h5')
+    model.save(modelname+"_acc.h5")
     model_json = model.to_json()
-    with open("deeplab-1-6.json", "w") as json_file:
+    with open(modelname+"_acc.json", "w") as json_file:
         json_file.write(model_json)
 
 #def train_model():
@@ -182,7 +187,8 @@ def get_class_for_generator(imgtype):
     fn=[]
     fc=[]
     count=0
-    for x in range(1,2):
+    numclasses=6
+    for x in range(1,numclasses+1):
         path="../Class"+str(x)+"/"
         read_file = file_io.read_file_to_string(path+imgtype+"/Label/Labels.txt")
         read_file = str(read_file)
@@ -212,7 +218,7 @@ def get_class_for_generator(imgtype):
         if defectmap[key]==1:
             fn.append(key)
             fc.append(filelist[key])
-        elif count<80*6:
+        elif count<80*numclasses:
             fn.append(key)
             fc.append(filelist[key])
             count=count+1
@@ -254,7 +260,7 @@ def IOU_calc(y_true, y_pred):
 def IOU_calc_loss(y_true, y_pred):
     return -IOU_calc(y_true, y_pred)
 
-def u-net():
+def unet():
     inputs = Input((512,512,1))
     inputs_norm = Lambda(lambda x: x/127.5 - 1.)
     conv1 = Conv2D(8, (3,3), activation = 'relu', padding='same')(inputs)
@@ -299,7 +305,8 @@ def u-net():
     conv10 = Conv2D(1, (1,1), activation='sigmoid')(conv9)
 
     model = Model(inputs=inputs, outputs = conv10)
-    model.compile(optimizer=Adam(lr=1e-4), loss=IOU_calc_loss, metrics=[IOU_calc])
+    model.compile(optimizer=Adam(lr=3e-2), loss=dice_coef_loss,
+                  metrics=[dice_coef, defect_accuracy, precision, recall, f1score])
     model.summary()
     return model
 
@@ -307,6 +314,21 @@ def u-net():
 
 #train_model();
 #binary_classifier();
+if len(sys.argv) < 2:
+    sys.exit(0)
+cmd=sys.argv[1]
+if cmd == "1":
+    binary_model = get_unet(n_filters=16, dropout=0.05, batchnorm=True)
+    modelname="unet"
+elif cmd == "2":
+    binary_model = get_resnet(f=16, bn_axis=3, classes=1)
+    modelname="resnet"
+elif cmd == "3":
+    binary_model = get_segnet()
+    modelname="segnet"
+else:
+    binary_model=get_deeplab()
+    modelname="deeplab"
 X_train, Y_train = get_class_for_generator("Train")
 X_train, X_test, y_train, y_test = train_test_split(X_train, Y_train, test_size=0.30)
 X_train=np.array(X_train)
@@ -315,9 +337,10 @@ y_train=np.array(y_train)
 y_test=np.array(y_test)
 print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 #X_test, Y_test = get_class_for_generator("Test")  
-#binary_model = u-net()
+#binary_model = unet()
 #binary_model = get_resnet(f=16, bn_axis=3, classes=1) 
-binary_model=get_deeplab()
+#binary_model=get_deeplab()
+#binary_model = get_segnet()
 #binary_model.save('binary-model-1.h5')
-binary_fit(binary_model, X_train, y_train, X_test, y_test) 
+binary_fit(binary_model, X_train, y_train, X_test, y_test, modelname) 
 

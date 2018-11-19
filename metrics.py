@@ -1,9 +1,11 @@
 import os
 
 import numpy as np
+import tensorflow as tf
 from keras import backend as K, models
 
-
+def defect_accuracy(y_true, y_pred):
+    return K.mean(K.equal(y_true, K.round(y_pred)), axis=1)
 
 def dice_coef(y_true, y_pred):
     smooth=1
@@ -74,4 +76,4 @@ def f1score(y_true, y_pred):
 
     precision = precision(y_true, y_pred)
     recall = recall(y_true, y_pred)
-    return 2 * ((precision * recall) / (precision + recall))
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))

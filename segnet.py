@@ -10,7 +10,7 @@ from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers import Adam
 from skimage.io import imsave
-from metrics import dice_coef, dice_coef_loss, precision, recall, f1score
+from metrics import dice_coef, dice_coef_loss, precision, recall, f1score, defect_accuracy
 #from data import load_train_data, load_test_data
 
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
@@ -140,7 +140,7 @@ def get_segnet():
 
     autoencoder.add(Activation('sigmoid'))
     autoencoder.compile(loss=dice_coef_loss, optimizer=Adam(lr=1e-3),
-                        metrics=[dice_coef, 'accuracy', precision, recall, f1score])
+                        metrics=[dice_coef, defect_accuracy, precision, recall, f1score])
     autoencoder.summary()
 
     return autoencoder

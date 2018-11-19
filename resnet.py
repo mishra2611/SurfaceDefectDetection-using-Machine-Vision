@@ -12,7 +12,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.optimizers import Adam
 from skimage.io import imsave
-from metrics import dice_coef, dice_coef_loss, precision, recall, f1score
+from metrics import dice_coef, dice_coef_loss, defect_accuracy, precision, recall, f1score
 #from data import load_train_data, load_test_data
 
 K.set_image_data_format('channels_last')  # TF dimension ordering in this code
@@ -162,7 +162,7 @@ def get_resnet(f=16, bn_axis=3, classes=1):
 
     model = Model(input, x, name='resnetUnet')
     model.compile(optimizer=Adam(lr=3e-4), loss=dice_coef_loss,
-                  metrics=[dice_coef, 'accuracy', precision, recall, f1score])
+                  metrics=[dice_coef, defect_accuracy, precision, recall, f1score])
 
     model.summary()
 
