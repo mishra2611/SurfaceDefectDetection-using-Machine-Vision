@@ -87,8 +87,8 @@ def get_file_from_custom_folder_contour(path):
     return train_images, filenames
 
 
-def predict_images(path):
-    model = load_model('u-net-test.h5',custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
+def predict_images(path, model):
+    model = load_model(model,custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
     X_train, filenames=get_file_from_custom_folder(path+"/")
     X_train_data = np.array(X_train)
     predicted_mask_batch = model.predict(X_train_data)
@@ -130,7 +130,8 @@ def countour_images(path):
 
 np.set_printoptions(threshold=np.inf, precision=8, floatmode='maxprec')
 path=sys.argv[1]
-predict_images(path)
+model=sys.argv[2]
+predict_images(path, model)
 countour_images(path)
 
 
