@@ -17,7 +17,7 @@ The project consists of three files which are used for defect identification and
    
 ## Procedure to run the predict.py script for predicting test images.  
 The predict.py script takes a command-line argument as the folder that contains the images, use the following command to run the script:  
- python predict.py </location/to/folder> '<modelname>'.  
+ python predict.py </location/to/folder> \<modelname>.  
  Please check that the location of the model is on the same directory for ease of use.
  
  The following verions of libraries were used for the development of this project:  
