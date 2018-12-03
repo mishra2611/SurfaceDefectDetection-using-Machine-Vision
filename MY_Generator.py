@@ -25,11 +25,13 @@ class MY_Generator(keras.utils.Sequence):
         for file_name in batch_x:
             img=resize(cv2.imread(file_name, 0),(512,512,1), mode='constant')
             #print(img.shape)
+            img = img / 255.0
             arr.append(img)
             img=np.rot90(img)
             arr.append(img)
         for file_name in batch_y:
             img = resize(cv2.imread(file_name, 0), (512,512,1), mode='constant')
+            img = img / 255.0
             arr2.append(img)
             img=np.rot90(img)
             arr2.append(img)
