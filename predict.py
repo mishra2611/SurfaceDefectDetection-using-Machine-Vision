@@ -88,7 +88,7 @@ def get_file_from_custom_folder_contour(path):
 
 
 def predict_images(path, model):
-    model = load_model(model,custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
+    model = load_model(model,custom_objects={'defect_accuracy':defect_accuracy, 'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef, 'precision':precision, 'recall':recall, 'f1score':f1score})
     X_train, filenames=get_file_from_custom_folder(path+"/")
     X_train_data = np.array(X_train)
     predicted_mask_batch = model.predict(X_train_data)
